@@ -1,23 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <meta name="description" content="" />
-        <meta name="author" content="" />
-        <title>Landing Page - Start Bootstrap Theme</title>
-        <!-- Favicon-->
-        <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
-        <!-- Bootstrap icons-->
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet" type="text/css" />
-        <!-- Google fonts-->
-        <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css" />
-        <!-- Core theme CSS (includes Bootstrap)-->
-        <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
-    </head>
-    <body>
-        <!-- Navigation-->
-     
+   @extends('layouts.app')
+
+   @section('content')
 
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
          <div class="container">
@@ -50,7 +33,7 @@
             </ul>
             <div class="d-flex">
                 
-                <button class="btn btn-sm btn-outline-info" type="submit">Signup</button>
+              <button class="btn btn-sm btn-outline-info"  data-bs-toggle="modal" data-bs-target="#exampleModal">Signup</button>
             </div>
           </div>
          </div>
@@ -179,7 +162,7 @@
                         <!-- To make this form functional, sign up at-->
                         <!-- https://startbootstrap.com/solution/contact-forms-->
                         <!-- to get an API token!-->
-                        <form class="form-subscribe" id="contactFormFooter" data-sb-form-api-token="API_TOKEN">
+                  
                             <!-- Email address input-->
                             <div class="row">
                                 <div class="col">
@@ -205,7 +188,7 @@
                             <!-- This is what your users will see when there is-->
                             <!-- an error submitting the form-->
                             <div class="d-none" id="submitErrorMessage"><div class="text-center text-danger mb-3">Error sending message!</div></div>
-                        </form>
+                    
                     </div>
                 </div>
             </div>
@@ -242,14 +225,141 @@
                 </div>
             </div>
         </footer>
-        <!-- Bootstrap core JS-->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-        <!-- Core theme JS-->
-        <script src="{{ asset('js/scripts.js') }}"></script>
-        <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
-        <!-- * *                               SB Forms JS                               * *-->
-        <!-- * * Activate your form at https://startbootstrap.com/solution/contact-forms * *-->
-        <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
-        <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
-    </body>
-</html>
+
+ <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Create Account</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+
+      <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">Full Name</label>
+            <input type="text" class="form-control" id="txtname" placeholder="Full name">
+      </div>
+
+        <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">Email address</label>
+            <input type="email" class="form-control" id="txtemail" placeholder="Email">
+        </div>
+
+        <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">Password</label>
+            <input type="password" class="form-control" id="txtpass" placeholder="Password">
+        </div>
+
+        <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">Re-Type Password</label>
+            <input type="password" class="form-control" id="txtpass2" placeholder="Re-Type Password">
+        </div>
+
+
+                
+        <div class="mb-3">
+        <label for="exampleFormControlInput1" class="form-label">Account Type</label>
+        <select class="form-select" aria-label="Default select example" id="type">
+            <option value="2">Freelance</option>
+            <option value="3">Client</option>
+        </select>
+
+        </div>
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" id="btnAdd" class="btn btn-primary">Create Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+@endsection
+
+
+@section('scripts')
+<script>
+
+var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
+
+$( document ).ready(function() {
+   
+});
+
+
+$(document).on('click','#btnAdd',function(e)
+{
+
+   
+    var name = $('#txtname').val();
+    var txtemail = $('#txtemail').val();
+    var txtpass = $('#txtpass').val();
+    var txtpass2 = $('#txtpass2').val();
+    var type = $('#type').val();
+
+  
+
+        var formData =  new FormData();
+
+            formData.append('name', name);
+            formData.append('email', txtemail);
+            formData.append('password', txtpass);
+            formData.append('password_confirmation', txtpass2);
+            formData.append('type', type);
+            formData.append('_token', CSRF_TOKEN);
+
+            $.ajax({
+            type:'POST',
+            url: 'user_registration',
+            dataType:"json",
+            processData: false,
+            contentType: false,
+            data:formData,
+            success:function(data)
+            {
+
+             if(data.error == false)
+             {
+                Swal.fire({
+                title: 'Create Account!',
+                text: data.message,
+                icon: 'success',
+                confirmButtonText: 'OK'
+                })
+
+                $("#exampleModal").modal('toggle');
+
+             }
+                    else {
+
+                    var err_txt = "";
+                    var get_text = "";
+                    for(var x=0 ; x < data.errors.length ; x++){
+
+                    get_text =  data.errors[x];
+
+                    err_txt += get_text + "<br>";
+                    }
+
+
+                    Swal.fire({
+                    title: 'Create Account!',
+                    icon: "error",
+                    html: err_txt,
+                    });
+
+                    }
+
+  
+
+            }
+            });
+
+
+
+
+});
+</script>
+@endsection
