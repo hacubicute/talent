@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Response;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Education;
 use App\Models\Jobs;
 use App\Models\JobSkills;
 use Spatie\Permission\Models\Role;
@@ -40,6 +41,57 @@ class FreelanceController extends Controller
     {
 
         switch ($section) {
+
+         
+
+            case "add_education":
+                $validator = \Validator::make($request->all(), [
+                    'school' => ['required', 'string', 'max:255'],
+                    'from' => ['required', 'string', 'max:255'],
+                    'to' => ['required', 'string', 'max:5000'],
+                    'degree' => ['required', 'string', 'max:255'],
+                ]);
+    
+                if ($validator->fails())
+                {
+                    return Response::json(array('error'=>true , 'errors'=>$validator->errors()->all()));
+                }
+    
+                    
+                $education = Education::create([
+                    'uid' => Auth::user()->id, 
+                    'school' => $request->school, 
+                    'course' => $request->degree,
+                    'from' => $request->from, 
+                    'to' => $request->to,
+                    
+                ]);
+    
+                if($education)
+                {
+
+                    return Response::json(array('error' => false, 'message' => 'Data Added', 'errors' => ''));
+    
+                }
+            break;
+
+            case "load_video":
+
+                $user = User::where('id', Auth::user()->id)->first(); 
+    
+
+                return Response::json(array('error' => false, 'message' => 'Data Added', 'video' => $user->video_path ));
+
+            break;
+
+            case "load_education":
+
+                $education = Education::where('uid', Auth::user()->id)->get(); 
+    
+
+                return Response::json($education);
+
+            break;
 
             case "change_picture":
 
@@ -88,6 +140,55 @@ class FreelanceController extends Controller
                     $new_name = "";
                 }
                 return Response::json(array('error'=>false , 'message'=>'Photo Successfully Updated','errors'=> null));
+            break;
+
+            case "change_video":
+
+                // print_r($_FILES);exit;
+
+                if ($request->hasFile('get_file')) {
+9-
+                    // print_r($_FILES);exit;
+
+                    $image = $request->file('get_file');
+                    $full_name = $image->getClientOriginalName();
+                    $filename = pathinfo($full_name, PATHINFO_FILENAME);
+                    $extension = pathinfo($full_name, PATHINFO_EXTENSION);
+                    $ranstr = sha1(time());
+                    
+                    $new_name = $filename.'_'. $ranstr. '.' . $image->getClientOriginalExtension();
+
+                    $exists = Storage::disk('local')->has('user_video/');
+
+                    $filePath = 'user_video/' . $new_name;
+
+                    if (!$exists) {
+                        Storage::disk('public')->makeDirectory('user_video/');
+                    }
+
+                    $user = User::where('id', Auth::user()->id)->first(); 
+                    $get_old = $user->video_path;
+                    $user->video_path = $new_name;
+                    $user->save();
+                        // echo $get_old;
+                        // print_r($_FILES);exit;
+
+
+                    $delete_exist = Storage::disk('public')->has('user_video/'. $get_old);
+                   
+              
+                    if($delete_exist)
+                    {
+                        Storage::disk('public')->delete('user_video/'.$get_old);
+                    }
+
+                    Storage::disk('public')->put($filePath, file_get_contents($image));
+
+                }
+                else {
+                    $new_name = "";
+                }
+                return Response::json(array('error'=>false , 'message'=>'Video Successfully Updated','errors'=> null));
             break;
 
             case 'add_job':

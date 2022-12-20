@@ -152,7 +152,16 @@
     <div class="mt-5 row">
           <div class="pic-holder col-md-4">
             <!-- uploaded pic shown here -->
-            <img id="profilePic" class="pic" src="https://source.unsplash.com/random/150x150?person">
+
+            <?php 
+                      if(Auth::user()->profile_path != "" || Auth::user()->profile_path != null)
+                      {
+            ?>
+                          <img id="profilePic" class="pic" src="/storage/profile_picture/<?php echo Auth::user()->profile_path; ?>">
+            <?php 
+                      }
+            ?>
+   
 
             <input class="uploadProfileInput" type="file" name="profile_pic" id="newProfilePhoto" accept="image/*" style="opacity: 0;" />
             <label for="newProfilePhoto" class="upload-file-block">
@@ -176,19 +185,32 @@
 
             <hr>
             <h1>Languages</h1>
-            <hr>
-            <h1>Video Introduction</h1>
-              <video width="400" controls>
-                <source src="mov_bbb.mp4" id="video_here">
-                Your browser does not support HTML5 video.
-              </video>
+
+            <div class="mb-3">
+              <label for="exampleFormControlTextarea1" class="form-label">Add Languages</label>
               <br>
-            <input type="file" name="file[]" class="file_multi_video" accept="video/*">
-            <hr>
-            <div class="row">
-                <div class="col"><h1>Education <i class="bi bi-pencil-fill fa-xs" data-bs-toggle="modal" data-bs-target="#exampleModal" style="font-size:25px;"></i></h1></div>
+              <select class="form-control js-data-example-ajax" id="langSelect" style="width:100%" ></select>
             </div>
-      
+
+            <hr>
+            <h1>Video Introduction <i class="bi bi-pencil-fill fa-xs" data-bs-toggle="modal" data-bs-target="#videoModal" style="font-size:25px;"></i></h1>
+              
+              <div id="div_video" style="display:none;">
+
+                  <video width="400" controls id="videoplayer">
+                        <source src="" id="user_video">
+                        Your browser does not support HTML5 video.
+                      </video>
+              </div> 
+
+            <hr>
+     
+            <div><h1>Education <i class="bi bi-pencil-fill fa-xs" data-bs-toggle="modal" data-bs-target="#exampleModal" style="font-size:25px;"></i></h1></div>
+           
+            <div id="div_education">
+
+            </div>
+
             <hr>
             <h1>Skills</h1>
 
@@ -203,7 +225,7 @@
     </div>
 
 
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -213,45 +235,64 @@
       <div class="modal-body">
           <div class="mb-3">
           <label for="exampleInputEmail1" class="form-label">School</label>
-          <input type="text" class="form-control" id="exampleInputEmail1">
+          <input type="text" id="txtschool" class="form-control txtclear" id="exampleInputEmail1">
           </div>
 
           <div class="mb-3">
           <label for="exampleInputEmail1" class="form-label">Degree</label>
-          <input type="text" class="form-control" id="exampleInputEmail1">
+          <input type="text" id="txtdegree" class="form-control txtclear" id="exampleInputEmail1">
           </div>
+
+          
 
           <div class="row">
 
           <div class="col-md-6">
           <label for="exampleInputEmail1" class="form-label">From</label>
-          <input type="text" class="form-control" id="exampleInputEmail1">
+          <input type="text" id="txtfrom" class="form-control txtclear" id="exampleInputEmail1">
           </div>
 
           <div class="col-md-6">
           <label for="exampleInputEmail1" class="form-label">To</label>
-          <input type="text" class="form-control" id="exampleInputEmail1">
+          <input type="text" id="txtto" class="form-control txtclear" id="exampleInputEmail1">
           </div>
 
           </div>
 
-          <div class="mb-3">
-          <label for="exampleInputEmail1" class="form-label">Degree</label>
-          <input type="text" class="form-control" id="exampleInputEmail1">
-          </div>
+       
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Add</button>
+        <button type="button" id="btnAddEducation" class="btn btn-primary">Add</button>
       </div>
     </div>
   </div>
 </div>
 
 
+<div class="modal fade" id="videoModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Manage Video</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
 
-
-
+              <video width="400" controls>
+                <source src="" id="video_here">
+                Your browser does not support HTML5 video.
+              </video>
+              <br>
+            <input type="file" name="file" id="gfile" class="user_video" accept="video/*">
+     
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btnVideo" class="btn btn-primary">Upload</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 @endsection
@@ -261,9 +302,102 @@
 <script>
 
 var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
-
+var base_url = window.location.origin;
 $( document ).ready(function() {
+  load_video();
+  load_education();
+});
 
+
+function load_video()
+{
+  var formData =  new FormData();
+  formData.append('_token', CSRF_TOKEN);
+  $.ajax({
+        type:'POST',
+        url: 'ajax/load_video',
+        dataType:"json",
+        processData: false,
+        contentType: false,
+        data:formData,
+        success:function(data)
+        {
+
+          if(data.video != null || data.video != "")
+          {
+            $('#div_video').show();
+            var strSRC = base_url + "/storage/user_video/" + data.video;
+            $("#videoplayer").html('<source src="'+strSRC+'"></source>' );
+         
+          }
+          else 
+          {
+                       
+            $('#div_video').hide();
+          }
+         
+        
+
+        }
+        });
+
+}
+
+
+function load_education()
+{
+  var formData =  new FormData();
+  formData.append('_token', CSRF_TOKEN);
+  $.ajax({
+        type:'POST',
+        url: 'ajax/load_education',
+        dataType:"json",
+        processData: false,
+        contentType: false,
+        data:formData,
+        success:function(data)
+        {
+
+         
+
+         for(var x=0; x < data.length; x++)
+         {
+
+          console.log(data[x].school);
+
+          
+
+         }
+            
+
+        }
+        });
+
+}
+
+
+$('#langSelect').select2({
+  multiple: true,
+  ajax: {
+    url: '/search_language',
+    data: function (params) {
+      var query = {
+        search: params.term,
+      }
+
+      // Query parameters will be ?search=[term]&type=public
+      return query;
+    },
+    processResults: function (data) {
+
+      console.log(data);
+      // Transforms the top-level key of the response object from 'items' to 'results'
+      return {
+        results: data
+      };
+    }
+    
+  }
 });
 
 $('#mySelect').select2({
@@ -297,7 +431,133 @@ $(document).on('click','#btnTest',function(e)
     console.log(myFiles);
 });
 
-$(document).on("change", ".file_multi_video", function(evt) {
+
+
+$(document).on('click','#btnAddEducation',function(e)
+{
+
+        var school = $('#txtschool').val();
+        var from = $('#txtfrom').val();
+        var to = $('#txtto').val();
+        var degree = $('#txtdegree').val();
+
+        var formData =  new FormData();
+
+        formData.append('school', school);
+        formData.append('from', from);
+        formData.append('to', to);
+        formData.append('degree', degree);
+        formData.append('_token', CSRF_TOKEN);
+
+        $.ajax({
+        type:'POST',
+        url: 'ajax/add_education',
+        dataType:"json",
+        processData: false,
+        contentType: false,
+        data:formData,
+        success:function(data)
+        {
+          if(data.error == false)
+                {
+                    Swal.fire({
+                    title: 'Add Education Success!',
+                    text: data.message,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                    })
+
+                    $("#exampleModal").modal('toggle');
+
+                    $('.txtclear').val(null);
+
+                }
+                 else {
+
+                 var err_txt = "";
+                 var get_text = "";
+                 for(var x=0 ; x < data.errors.length ; x++){
+
+                 get_text =  data.errors[x];
+
+                 err_txt += get_text + "<br>";
+                 }
+
+
+                 Swal.fire({
+                 title: 'Upload Video!',
+                 icon: "error",
+                 html: err_txt,
+                 });
+
+                 }
+
+
+        }
+        });
+});
+
+
+
+$(document).on('click','#btnVideo',function(e)
+{
+
+  var gfiles = $('#gfile')[0].files[0];
+
+
+        var formData =  new FormData();
+
+        formData.append('get_file', gfiles);
+        formData.append('_token', CSRF_TOKEN);
+
+        $.ajax({
+        type:'POST',
+        url: 'ajax/change_video',
+        dataType:"json",
+        processData: false,
+        contentType: false,
+        data:formData,
+        success:function(data)
+        {
+          if(data.error == false)
+                {
+                    Swal.fire({
+                    title: 'Upload Video!',
+                    text: data.message,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                    })
+
+                    $("#videoModal").modal('toggle');
+
+                }
+                 else {
+
+                 var err_txt = "";
+                 var get_text = "";
+                 for(var x=0 ; x < data.errors.length ; x++){
+
+                 get_text =  data.errors[x];
+
+                 err_txt += get_text + "<br>";
+                 }
+
+
+                 Swal.fire({
+                 title: 'Upload Video!',
+                 icon: "error",
+                 html: err_txt,
+                 });
+
+                 }
+
+
+        }
+        });
+});
+
+
+$(document).on("change", ".user_video", function(evt) {
   var $source = $('#video_here');
   $source[0].src = URL.createObjectURL(this.files[0]);
   $source.parent()[0].load();

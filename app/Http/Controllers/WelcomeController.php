@@ -7,6 +7,7 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Skills;
+use App\Models\Languages;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Hash;
@@ -85,8 +86,32 @@ class WelcomeController extends Controller
 
       
     }
+    public function search_language(Request $request) 
+    {
 
-    
+        $search_string = $request->search;
+
+        if($search_string != "" || $search_string != null)
+        {
+            $skills = Languages::where('name','LIKE',"%{$request->search}%")->get();
+        
+            for($x=0; $x < sizeof($skills); $x++) 
+            {
+                $skills[$x]->text = $skills[$x]->name;
+            }
+            
+            
+            return response()->json($skills); 
+
+        }
+        else {
+            return response()->json(null);
+        }
+
+      
+    }
+
+
 
     public function user_login(Request $request)
     {

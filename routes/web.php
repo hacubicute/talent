@@ -36,6 +36,7 @@ Route::post('/user_registration', [WelcomeController::class, 'user_registration'
 Route::post('/user_login', [WelcomeController::class, 'user_login'])->name('user_login');
 Route::get('/logout', [WelcomeController::class, 'logout'])->name('logout');
 Route::get('/search_select', [WelcomeController::class, 'search_select'])->name('search_select');
+Route::get('/search_language', [WelcomeController::class, 'search_language'])->name('search_language');
 //client
 
 Route::get('/client/dashboard', [ClientController::class, 'dashboard'])->name('dashboard');
