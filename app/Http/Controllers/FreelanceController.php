@@ -6,6 +6,8 @@ use Response;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Education;
+use App\Models\Languages;
+use App\Models\UserLanguages;
 use App\Models\Jobs;
 use App\Models\JobSkills;
 use Spatie\Permission\Models\Role;
@@ -32,8 +34,18 @@ class FreelanceController extends Controller
 
     public function profile(Request $request)
     {
+        $languages = Languages::all();
 
-        return view('freelance.profile');
+        $user_languages = UserLanguages::where('user_languages.uid' , Auth::user()->id)->with('language')->get();
+
+        // print_r($user_languages[0]->language);exit;
+    //     $users = DB::table('users')
+    // ->selectRaw('count(*) as user_count, status')
+    // ->where('status', '<>', 1)
+    // ->groupBy('status')
+    // ->get();
+  
+        return view('freelance.profile')->with('languages' , $languages)->with('user_languages' , $user_languages);
     }
 
 
@@ -68,6 +80,22 @@ class FreelanceController extends Controller
                 ]);
     
                 if($education)
+                {
+
+                    return Response::json(array('error' => false, 'message' => 'Data Added', 'errors' => ''));
+    
+                }
+            break;
+
+            case "add_language":
+
+                $language = UserLanguages::create([
+                    'uid' => Auth::user()->id, 
+                    'lid' => $request->lang,
+                    'proficiency' => $request->pro,
+                    
+                ]);
+                if($language)
                 {
 
                     return Response::json(array('error' => false, 'message' => 'Data Added', 'errors' => ''));

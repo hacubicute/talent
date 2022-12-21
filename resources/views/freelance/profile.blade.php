@@ -71,7 +71,9 @@
 .pic-holder.uploadInProgress .upload-loader {
   opacity: 1;
 }
-
+.iconsize {
+ font-size: 0.73em;
+}
 /* Snackbar css */
 .snackbar {
   visibility: hidden;
@@ -139,6 +141,16 @@
   }
 }
 
+.select2-choices {
+  min-height: 150px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.bigdrop.select2-container .select2-results {max-height: 200px;}
+.bigdrop .select2-results {max-height: 200px;}
+.bigdrop .select2-choices {min-height: 150px; max-height: 150px; overflow-y: auto;}
+
 </style>
 
 @endsection
@@ -184,16 +196,13 @@
     <div>   
 
             <hr>
-            <h1>Languages</h1>
-
-            <div class="mb-3">
-              <label for="exampleFormControlTextarea1" class="form-label">Add Languages</label>
-              <br>
-              <select class="form-control js-data-example-ajax" id="langSelect" style="width:100%" ></select>
-            </div>
-
+            <h1>Languages <i class="bi bi-plus-circle iconsize" data-bs-toggle="modal" data-bs-target="#langModal"></i><i class="bi bi-pencil-fill fa-xs iconsize" data-bs-toggle="modal" data-bs-target="#exampleModal" ></i></h1>
+           
+            {{ $user_languages[0]->language->pluck('name')->implode(',') }}
+            
+                
             <hr>
-            <h1>Video Introduction <i class="bi bi-pencil-fill fa-xs" data-bs-toggle="modal" data-bs-target="#videoModal" style="font-size:25px;"></i></h1>
+            <h1>Video Introduction <i class="bi bi-pencil-fill fa-xs iconsize" data-bs-toggle="modal" data-bs-target="#videoModal" ></i></h1>
               
               <div id="div_video" style="display:none;">
 
@@ -205,7 +214,7 @@
 
             <hr>
      
-            <div><h1>Education <i class="bi bi-pencil-fill fa-xs" data-bs-toggle="modal" data-bs-target="#exampleModal" style="font-size:25px;"></i></h1></div>
+            <div><h1>Education <i class="bi bi-plus-circle iconsize" ></i> <i class="bi bi-pencil-fill fa-xs iconsize" data-bs-toggle="modal" data-bs-target="#exampleModal" ></i></h1></div>
            
             <div id="div_education">
 
@@ -223,6 +232,48 @@
 
             <hr>
     </div>
+
+
+ <div class="modal fade" id="langModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Add Language</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+
+        <div class="row">
+           <div class="col-md-6">
+             <label for="exampleInputPassword1" class="form-label">Language</label> <br>
+              <select id="langSelect" name="state" style="width:100%">
+
+                @foreach($languages as $language)
+                <option value=" {{$language->id}} ">{{ $language->name }}</option>
+                @endforeach
+                         
+         
+              </select>
+          </div>
+
+          <div class="col-md-6">
+
+              <div class="mb-3">
+              <label for="exampleInputPassword1" class="form-label">Proficiency (1-10)</label>
+              <input type="number" class="form-control" id="txtpro" value="1" min="1" max="10">
+              </div>
+              
+          </div>
+        </div> 
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" id="btnAddLang" class="btn btn-primary">Add</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -306,6 +357,9 @@ var base_url = window.location.origin;
 $( document ).ready(function() {
   load_video();
   load_education();
+  $('#langSelect').select2({
+        dropdownParent: $('#langModal')
+    });
 });
 
 
@@ -344,6 +398,9 @@ function load_video()
 }
 
 
+
+
+
 function load_education()
 {
   var formData =  new FormData();
@@ -375,30 +432,71 @@ function load_education()
 
 }
 
+$(document).on('click','#btnAddLang',function(e)
+{
 
-$('#langSelect').select2({
-  multiple: true,
-  ajax: {
-    url: '/search_language',
-    data: function (params) {
-      var query = {
-        search: params.term,
-      }
+   
+        var pro = $('#txtpro').val();
+        var lang = $('#langSelect').val();
+ 
 
-      // Query parameters will be ?search=[term]&type=public
-      return query;
-    },
-    processResults: function (data) {
+        var formData =  new FormData();
 
-      console.log(data);
-      // Transforms the top-level key of the response object from 'items' to 'results'
-      return {
-        results: data
-      };
-    }
-    
-  }
+        formData.append('pro', pro);
+        formData.append('lang', lang);
+        formData.append('_token', CSRF_TOKEN);
+
+        $.ajax({
+        type:'POST',
+        url: 'ajax/add_language',
+        dataType:"json",
+        processData: false,
+        contentType: false,
+        data:formData,
+        success:function(data)
+        {
+          if(data.error == false)
+                {
+                    Swal.fire({
+                    title: 'Add Langugae Success!',
+                    text: data.message,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                    })
+
+                    $("#langModal").modal('toggle');
+
+                    $('#langSelect').select2().val(1).trigger("change");
+
+                }
+                 else {
+
+                 var err_txt = "";
+                 var get_text = "";
+                 for(var x=0 ; x < data.errors.length ; x++){
+
+                 get_text =  data.errors[x];
+
+                 err_txt += get_text + "<br>";
+                 }
+
+
+                 Swal.fire({
+                 title: 'Upload Video!',
+                 icon: "error",
+                 html: err_txt,
+                 });
+
+                 }
+
+
+        }
+        });
+
+  // alert($('#langSelect').val());
+
 });
+
 
 $('#mySelect').select2({
   multiple: true,
@@ -424,12 +522,7 @@ $('#mySelect').select2({
   }
 });
 
-$(document).on('click','#btnTest',function(e)
-{
-  var myFile = $('#newProfilePhoto').prop('files');
-  // var gfiles = $('#newProfilePhoto')[0].files;
-    console.log(myFiles);
-});
+
 
 
 
