@@ -14,6 +14,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Hash;
 use Auth;
+use DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
@@ -36,16 +37,17 @@ class FreelanceController extends Controller
     {
         $languages = Languages::all();
 
-        $user_languages = UserLanguages::where('user_languages.uid' , Auth::user()->id)->with('language')->get();
+        //$user_languages = UserLanguages::where('user_languages.uid' , Auth::user()->id)->with('language')->get();
 
-        // print_r($user_languages[0]->language);exit;
-    //     $users = DB::table('users')
-    // ->selectRaw('count(*) as user_count, status')
-    // ->where('status', '<>', 1)
-    // ->groupBy('status')
-    // ->get();
+        $user_langauges = DB::table('user_languages')
+        ->selectRaw('languages.name')
+        ->join('languages' , 'user_languages.lid', '=' , 'languages.id')
+        ->where('user_languages.uid', Auth::user()->id)
+        ->get();
+    
   
-        return view('freelance.profile')->with('languages' , $languages)->with('user_languages' , $user_languages);
+            
+        return view('freelance.profile')->with('languages' , $languages)->with('user_languages' , $user_langauges);
     }
 
 
@@ -98,7 +100,15 @@ class FreelanceController extends Controller
                 if($language)
                 {
 
-                    return Response::json(array('error' => false, 'message' => 'Data Added', 'errors' => ''));
+                    $user_langauges = DB::table('user_languages')
+                    ->selectRaw('languages.name')
+                    ->join('languages' , 'user_languages.lid', '=' , 'languages.id')
+                    ->where('user_languages.uid', Auth::user()->id)
+                    ->get();
+                
+                    $updated_languages = $user_langauges->pluck('name')->implode(',');
+
+                    return Response::json(array('error' => false, 'message' => 'Data Added', 'errors' => '' , 'languages'=> $updated_languages));
     
                 }
             break;

@@ -198,8 +198,8 @@
             <hr>
             <h1>Languages <i class="bi bi-plus-circle iconsize" data-bs-toggle="modal" data-bs-target="#langModal"></i><i class="bi bi-pencil-fill fa-xs iconsize" data-bs-toggle="modal" data-bs-target="#exampleModal" ></i></h1>
            
-            {{ $user_languages[0]->language->pluck('name')->implode(',') }}
-            
+        
+            <h5 class="mt-4" id="txtlanguages">{{ $user_languages->pluck('name')->implode(',') }}</h5>
                 
             <hr>
             <h1>Video Introduction <i class="bi bi-pencil-fill fa-xs iconsize" data-bs-toggle="modal" data-bs-target="#videoModal" ></i></h1>
@@ -260,7 +260,7 @@
 
               <div class="mb-3">
               <label for="exampleInputPassword1" class="form-label">Proficiency (1-10)</label>
-              <input type="number" class="form-control" id="txtpro" value="1" min="1" max="10">
+              <input type="number" class="form-control" id="txtpro" value="1" min="1" max="10" onKeyDown="return false">
               </div>
               
           </div>
@@ -377,8 +377,11 @@ function load_video()
         success:function(data)
         {
 
+          console.log(data.video);
+
           if(data.video != null || data.video != "")
           {
+      
             $('#div_video').show();
             var strSRC = base_url + "/storage/user_video/" + data.video;
             $("#videoplayer").html('<source src="'+strSRC+'"></source>' );
@@ -386,8 +389,9 @@ function load_video()
           }
           else 
           {
-                       
-            $('#div_video').hide();
+                  
+            alert("xd");
+            $('#div_video').css('display','none');
           }
          
         
@@ -466,8 +470,12 @@ $(document).on('click','#btnAddLang',function(e)
 
                     $("#langModal").modal('toggle');
 
-                    $('#langSelect').select2().val(1).trigger("change");
+                    // $('#langSelect').select2().val(1).trigger("change");
+                    $('#langSelect').select2({
+                    dropdownParent: $('#langModal')
+                    }).val(1).trigger("change");
 
+                    $('#txtlanguages').html(data.languages);
                 }
                  else {
 
